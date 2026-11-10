@@ -1,3 +1,5 @@
+<p align="center"><img src="https://raw.githubusercontent.com/v-gachkovsky/easy-fishing/main/docs/logo.png" width="160" alt="Easy Fishing"></p>
+
 **A fishing hook on your screen: left-click casts, right-click hooks the fish. And the catch of the session.**
 
 > **Early development.** Easy Fishing is young. If something looks wrong or you miss a feature, please tell me
