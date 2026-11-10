@@ -5,7 +5,7 @@
 ## Version: 0.1.0
 ## SavedVariables: EasyFishingDB
 ## SavedVariablesPerCharacter: EasyFishingCharDB
-## IconTexture: Interface\Icons\Trade_Fishing
+## IconTexture: Interface\AddOns\EasyFishing\Media\logo
 
 Locale.lua
 Locales\ukUA.lua
@@ -13,4 +13,5 @@ Core.lua
 Widgets.lua
 Icon.lua
 Grid.lua
+Minimap.lua
 Options.lua

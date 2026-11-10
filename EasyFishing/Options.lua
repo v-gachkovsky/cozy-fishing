@@ -170,6 +170,7 @@ local function Build()
     Select("Language", ns.LANGUAGES, function() return db.locale end, function(v) db.locale = v end)
     Select("Move frames with", ns.GetMoveModes, function() return db.moveWith end, function(v) db.moveWith = v end)
     Check("Show the frames without a fishing pole (to place them)", function() return ns.placing end, function(v) ns.placing = v or nil end)
+    Check("Show the minimap button", function() return not db.minimap.hide end, function(v) db.minimap.hide = not v end)
 
     Header("Fishing hook icon")
     Check("Show the icon while a fishing pole is in hand", function() return db.icon.enabled end, function(v) db.icon.enabled = v end)

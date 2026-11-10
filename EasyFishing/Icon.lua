@@ -161,7 +161,7 @@ function Icon:Create()
 
     local probe = art:CreateTexture()
     local texture, whole = ns.HOOK_TEXTURE, false
-    if probe:SetTexture(texture) == false then texture, whole = ns.LOGO, true end
+    if probe:SetTexture(texture) == false then texture, whole = ns.FISHING_ICON, true end
     probe:Hide()
 
     btn.hook = HookPieces(art, "ARTWORK", texture, whole)

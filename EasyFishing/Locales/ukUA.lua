@@ -52,4 +52,11 @@ ns.LOCALES.ukUA = {
     ["A session lasts from putting a fishing pole on to taking it off or changing it for a weapon."] = "Сесія триває від того, як ви берете вудку, до того, як знімаєте її чи міняєте на зброю.",
     ["Reset positions"] = "Скинути позиції",
     ["Start the catch over"] = "Почати улов з нуля",
+    ["Show the minimap button"] = "Показувати кнопку біля мінімапи",
+
+    -- Minimap button
+    ["Left-click: settings"] = "Лівий клік: налаштування",
+    ["Right-click: show or hide the frames for placing"] = "Правий клік: показати чи сховати рамки, щоб їх розставити",
+    ["Drag to move around the minimap"] = "Перетягніть, щоб пересунути по мінімапі",
+    ["show or hide the minimap button"] = "показати чи сховати кнопку біля мінімапи",
 }

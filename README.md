@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.png" width="128" alt="Easy Fishing"></p>
+
 <h1 align="center">Easy Fishing</h1>
 
 <p align="center">
@@ -31,6 +33,7 @@ ln -s "$PWD/EasyFishing" "/Applications/World of Warcraft/_forever_/Interface/Ad
 | **Moving** | Alt + left-drag by default; Ctrl, Shift or Cmd (Mac) in the settings. Both frames move the same way |
 | **Resizing** | Hover an unlocked frame and drag the grip in its bottom right corner, or use the sliders |
 | **Locking** | The icon and the grid lock separately; a locked frame can't be moved or resized |
+| **Minimap button** | Left-click opens the settings, right-click shows the frames for placing; drag it around the minimap. Can be hidden |
 
 The grid can be turned off, and has a scale, a column count and a background opacity.
 
@@ -59,6 +62,7 @@ can't react to the bite itself.
 | `/ef stats` | Print the catch of this session |
 | `/ef clear` | Start the catch of this session over |
 | `/ef reset` | Put the frames back in their default places |
+| `/ef minimap` | Show or hide the minimap button |
 | `/ef debug`, `/ef debug off` | Trace the hook in chat (and in the saved variables), for bug reports |
 
 ## Languages

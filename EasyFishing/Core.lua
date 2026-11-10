@@ -2,7 +2,9 @@ local ADDON, ns = ...
 local L = ns.L
 
 ns.VERSION = (C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata)(ADDON, "Version") or "?"
-ns.LOGO = "Interface\\Icons\\Trade_Fishing"
+ns.LOGO = "Interface\\AddOns\\EasyFishing\\Media\\logo"
+-- Used when the client has no bobber cursor texture.
+ns.FISHING_ICON = "Interface\\Icons\\Trade_Fishing"
 -- The cursor the game shows over a fishing bobber.
 ns.HOOK_TEXTURE = "Interface\\Cursor\\Fishing"
 
@@ -27,6 +29,7 @@ local DEFAULTS = {
     locale = "enUS",
     moveWith = "alt",
     summary = true,
+    minimap = { hide = false, angle = 200 },
     icon = {
         enabled = true,
         locked = false,
@@ -257,6 +260,7 @@ function ns.RefreshAll()
     if not ns.ready then return end
     ns.Icon:Refresh()
     ns.Grid:Refresh()
+    ns.Minimap:Refresh()
 end
 
 function ns.SetAllLocked(locked)
@@ -314,6 +318,7 @@ end)
 On("PLAYER_LOGIN", function()
     ns.Icon:Create()
     ns.Grid:Create()
+    ns.Minimap:Create()
     ns.InitOptions()
     ns.ready = true
 end)
@@ -390,6 +395,10 @@ SlashCmdList.EASYFISHING = function(msg)
         ns.ClearSession()
     elseif msg == "reset" then
         ns.ResetPositions()
+    elseif msg == "minimap" then
+        ns.db.minimap.hide = not ns.db.minimap.hide
+        ns.RefreshAll()
+        if ns.RefreshOptions then ns.RefreshOptions() end
     elseif msg == "debug off" then
         ns.db.debug = nil
         ns.db.debugLog = nil
@@ -413,5 +422,6 @@ SlashCmdList.EASYFISHING = function(msg)
         ns.Print("/ef stats — %s", L["print the catch of this session"])
         ns.Print("/ef clear — %s", L["start the catch of this session over"])
         ns.Print("/ef reset — %s", L["put the frames back in their default places"])
+        ns.Print("/ef minimap — %s", L["show or hide the minimap button"])
     end
 end
