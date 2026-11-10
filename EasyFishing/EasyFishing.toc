@@ -1,0 +1,16 @@
+## Interface: 16001
+## Title: Easy Fishing
+## Notes: A fishing hook on the screen while a fishing pole is in hand: left-click casts, right-click hooks the fish. Shows the catch of the session.
+## Author: Volodymyr Hachkovsky
+## Version: 0.1.0
+## SavedVariables: EasyFishingDB
+## SavedVariablesPerCharacter: EasyFishingCharDB
+## IconTexture: Interface\Icons\Trade_Fishing
+
+Locale.lua
+Locales\ukUA.lua
+Core.lua
+Widgets.lua
+Icon.lua
+Grid.lua
+Options.lua
