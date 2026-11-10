@@ -1,6 +1,6 @@
-<p align="center"><img src="docs/logo.png" width="128" alt="Easy Fishing"></p>
+<p align="center"><img src="docs/logo.png" width="128" alt="Cozy Fishing"></p>
 
-<h1 align="center">Easy Fishing</h1>
+<h1 align="center">Cozy Fishing</h1>
 
 <p align="center">
   A fishing hook on the screen while a fishing pole is in hand, for <b>World of Warcraft: Forever</b><br>
@@ -15,10 +15,10 @@
 
 ## Installation
 
-Copy or symlink the `EasyFishing` folder into `Interface/AddOns/` of the Forever client:
+Copy or symlink the `CozyFishing` folder into `Interface/AddOns/` of the Forever client:
 
 ```sh
-ln -s "$PWD/EasyFishing" "/Applications/World of Warcraft/_forever_/Interface/AddOns/EasyFishing"
+ln -s "$PWD/CozyFishing" "/Applications/World of Warcraft/_forever_/Interface/AddOns/CozyFishing"
 ```
 
 ## Features
@@ -39,7 +39,7 @@ The grid can be turned off, and has a scale, a column count and a background opa
 
 ### How the hook works
 
-An addon can't click the bobber itself. For the session Easy Fishing turns on the game's soft targeting
+An addon can't click the bobber itself. For the session Cozy Fishing turns on the game's soft targeting
 of objects (`SoftTargetInteract 3`, with a wide arc and 30 yards), which makes your bobber the interact target.
 While the line is out the icon stops taking the mouse, so a click on it lands in the game world, and while the
 cursor is over it the right mouse button is bound to the game's **Interact with Target** (and the left one to
@@ -47,7 +47,7 @@ casting again). When the pole comes off, the settings go back to what they were 
 meanwhile is left alone).
 
 Addons that keep `SoftTargetInteract` in their own profile (Plater does) put their value back after loading;
-Easy Fishing sets it again before every cast while the session lasts.
+Cozy Fishing sets it again before every cast while the session lasts.
 
 The game doesn't tell addons when a fish bites (only the bobber and the splash sound show it), so the icon
 can't react to the bite itself.
@@ -56,14 +56,14 @@ can't react to the bite itself.
 
 | | |
 |---|---|
-| `/ef` | Settings |
-| `/ef lock`, `/ef unlock` | Lock or unlock both frames |
-| `/ef place` | Show the frames without a fishing pole, to place them |
-| `/ef stats` | Print the catch of this session |
-| `/ef clear` | Start the catch of this session over |
-| `/ef reset` | Put the frames back in their default places |
-| `/ef minimap` | Show or hide the minimap button |
-| `/ef debug`, `/ef debug off` | Trace the hook in chat (and in the saved variables), for bug reports |
+| `/cf` | Settings |
+| `/cf lock`, `/cf unlock` | Lock or unlock both frames |
+| `/cf place` | Show the frames without a fishing pole, to place them |
+| `/cf stats` | Print the catch of this session |
+| `/cf clear` | Start the catch of this session over |
+| `/cf reset` | Put the frames back in their default places |
+| `/cf minimap` | Show or hide the minimap button |
+| `/cf debug`, `/cf debug off` | Trace the hook in chat (and in the saved variables), for bug reports |
 
 ## Languages
 

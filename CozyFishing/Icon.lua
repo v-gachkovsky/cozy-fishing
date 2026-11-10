@@ -17,7 +17,7 @@ local driver
 
 local function Cfg() return ns.db.icon end
 
--- Debug lines go to chat and to EasyFishingDB.debugLog (the last 500), to read from the saved file after a reload.
+-- Debug lines go to chat and to CozyFishingDB.debugLog (the last 500), to read from the saved file after a reload.
 local LOG_SIZE = 500
 local function Trace(fmt, ...)
     if not ns.db.debug then return end
@@ -46,7 +46,7 @@ local function SetHookBinding(on)
     if on == hookBound or InCombatLockdown() then return end
     if on then
         SetOverrideBinding(hookOwner, true, "BUTTON2", "INTERACTTARGET")
-        SetOverrideBindingClick(hookOwner, true, "BUTTON1", "EasyFishingIcon", "LeftButton")
+        SetOverrideBindingClick(hookOwner, true, "BUTTON1", "CozyFishingIcon", "LeftButton")
         Trace("hook armed: right click = %s, soft target: %s", Safe(GetBindingAction("BUTTON2", true)), ns.SoftInteractText())
     else
         ClearOverrideBindings(hookOwner)
@@ -148,7 +148,7 @@ local function HookPieces(parent, layer, texture, whole)
 end
 
 function Icon:Create()
-    btn = CreateFrame("Button", "EasyFishingIcon", UIParent, "SecureActionButtonTemplate")
+    btn = CreateFrame("Button", "CozyFishingIcon", UIParent, "SecureActionButtonTemplate")
     btn:SetFrameStrata("MEDIUM")
     btn:RegisterForClicks("LeftButtonUp", "LeftButtonDown")
     btn:SetAttribute("type1", "macro")

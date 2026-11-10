@@ -51,7 +51,7 @@ local function GetCell(i)
 end
 
 function Grid:Create()
-    frame = CreateFrame("Frame", "EasyFishingGrid", UIParent)
+    frame = CreateFrame("Frame", "CozyFishingGrid", UIParent)
     frame:SetFrameStrata("MEDIUM")
     frame:SetSize(CELL, HEADER)
     frame.anchor = "TOPLEFT"

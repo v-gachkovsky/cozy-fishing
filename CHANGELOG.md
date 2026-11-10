@@ -21,7 +21,7 @@ The first version, for WoW Forever.
 - **Sessions** from putting a pole on to taking it off; kept over a reload or a relog within 30 minutes; an
   optional summary in chat at the end.
 - Moving with a modifier + left-drag (Alt by default; Ctrl, Shift, Cmd), resizing with a corner grip, separate
-  locks, placing without a pole (`/ef place`), English and Ukrainian.
-- `/ef debug`: a trace of the hook in chat and in the saved variables.
+  locks, placing without a pole (`/cf place`), English and Ukrainian.
+- `/cf debug`: a trace of the hook in chat and in the saved variables.
 - The logo, in the addon list, the settings and on a minimap button (left-click: settings, right-click: show
-  the frames for placing; drag it around the minimap; `/ef minimap` hides it).
+  the frames for placing; drag it around the minimap; `/cf minimap` hides it).

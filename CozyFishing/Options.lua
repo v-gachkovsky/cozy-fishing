@@ -1,7 +1,7 @@
 local ADDON, ns = ...
 local L = ns.L
 
--- The settings page, in the game's Settings > AddOns (or Interface Options on older clients). /ef opens it.
+-- The settings page, in the game's Settings > AddOns (or Interface Options on older clients). /cf opens it.
 local panel, content, category
 local refreshers = {}
 local y = 0
@@ -112,7 +112,7 @@ local function Select(key, values, get, set)
         refreshers[#refreshers + 1] = function() btn:GenerateMenu() end
     else
         selectCount = selectCount + 1 -- the old template needs a named frame
-        btn = CreateFrame("Frame", "EasyFishingSelect" .. selectCount, content, "UIDropDownMenuTemplate")
+        btn = CreateFrame("Frame", "CozyFishingSelect" .. selectCount, content, "UIDropDownMenuTemplate")
         btn:SetPoint("TOPLEFT", RIGHT - 16, y + 6)
         UIDropDownMenu_SetWidth(btn, 180)
         UIDropDownMenu_Initialize(btn, function(_, level)
@@ -164,7 +164,7 @@ local function Build()
     logo:SetTexture(ns.LOGO)
     local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalHuge")
     title:SetPoint("LEFT", logo, "RIGHT", 8, 0)
-    title:SetText("Easy Fishing |cff888888" .. ns.VERSION .. "|r")
+    title:SetText("Cozy Fishing |cff888888" .. ns.VERSION .. "|r")
     y = -56
 
     Select("Language", ns.LANGUAGES, function() return db.locale end, function(v) db.locale = v end)
@@ -199,7 +199,7 @@ end
 
 function ns.InitOptions()
     panel = CreateFrame("Frame")
-    panel.name = "Easy Fishing"
+    panel.name = "Cozy Fishing"
     local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 4, -4)
     scroll:SetPoint("BOTTOMRIGHT", -28, 4)
@@ -210,7 +210,7 @@ function ns.InitOptions()
     panel:SetScript("OnShow", ns.RefreshOptions)
 
     if Settings and Settings.RegisterCanvasLayoutCategory then
-        local ok, cat = pcall(Settings.RegisterCanvasLayoutCategory, panel, "Easy Fishing")
+        local ok, cat = pcall(Settings.RegisterCanvasLayoutCategory, panel, "Cozy Fishing")
         if ok and cat then
             category = cat
             pcall(Settings.RegisterAddOnCategory, cat)

@@ -29,7 +29,7 @@ local function OnDragUpdate()
 end
 
 function Minimap_:Create()
-    local b = CreateFrame("Button", "EasyFishingMinimapButton", Minimap)
+    local b = CreateFrame("Button", "CozyFishingMinimapButton", Minimap)
     b:SetSize(31, 31)
     b:SetFrameStrata("MEDIUM")
     b:SetFrameLevel(8)
@@ -65,7 +65,7 @@ function Minimap_:Create()
     b:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
     b:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:AddLine("Easy Fishing", 0.31, 0.76, 0.97)
+        GameTooltip:AddLine("Cozy Fishing", 0.31, 0.76, 0.97)
         GameTooltip:AddLine(L["Left-click: settings"], 1, 1, 1)
         GameTooltip:AddLine(L["Right-click: show or hide the frames for placing"], 1, 1, 1)
         local s = ns.session

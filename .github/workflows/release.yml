@@ -19,7 +19,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      ADDON: EasyFishing
+      ADDON: CozyFishing
     steps:
       - uses: actions/checkout@v4
 

@@ -2,7 +2,7 @@ local ADDON, ns = ...
 local L = ns.L
 
 ns.VERSION = (C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata)(ADDON, "Version") or "?"
-ns.LOGO = "Interface\\AddOns\\EasyFishing\\Media\\logo"
+ns.LOGO = "Interface\\AddOns\\CozyFishing\\Media\\logo"
 -- Used when the client has no bobber cursor texture.
 ns.FISHING_ICON = "Interface\\Icons\\Trade_Fishing"
 -- The cursor the game shows over a fishing bobber.
@@ -52,7 +52,7 @@ local DEFAULTS = {
 ------------------------------------------------------------------------
 function ns.Print(fmt, ...)
     local text = select("#", ...) > 0 and fmt:format(...) or fmt
-    DEFAULT_CHAT_FRAME:AddMessage("|cff4fc3f7Easy Fishing|r: " .. text)
+    DEFAULT_CHAT_FRAME:AddMessage("|cff4fc3f7Cozy Fishing|r: " .. text)
 end
 
 -- Values the client hides from addons ("secret" values) can't be compared or read.
@@ -309,10 +309,10 @@ end)
 
 On("ADDON_LOADED", function(name)
     if name ~= ADDON then return end
-    EasyFishingDB = EasyFishingDB or {}
-    EasyFishingCharDB = EasyFishingCharDB or {}
-    Fill(EasyFishingDB, DEFAULTS)
-    ns.db, ns.char = EasyFishingDB, EasyFishingCharDB
+    CozyFishingDB = CozyFishingDB or {}
+    CozyFishingCharDB = CozyFishingCharDB or {}
+    Fill(CozyFishingDB, DEFAULTS)
+    ns.db, ns.char = CozyFishingDB, CozyFishingCharDB
 end)
 
 On("PLAYER_LOGIN", function()
@@ -374,9 +374,9 @@ end)
 ------------------------------------------------------------------------
 -- Slash commands
 ------------------------------------------------------------------------
-SLASH_EASYFISHING1 = "/ef"
-SLASH_EASYFISHING2 = "/easyfishing"
-SlashCmdList.EASYFISHING = function(msg)
+SLASH_COZYFISHING1 = "/cf"
+SLASH_COZYFISHING2 = "/cozyfishing"
+SlashCmdList.COZYFISHING = function(msg)
     msg = (msg or ""):lower():match("^%s*(.-)%s*$")
     if msg == "" or msg == "options" or msg == "config" then
         ns.OpenOptions()
@@ -404,11 +404,11 @@ SlashCmdList.EASYFISHING = function(msg)
         ns.db.debugLog = nil
         ns.Print("debug off")
     elseif msg == "debug" then
-        -- Tracing on (a fresh log), and the state now. "/ef debug off" turns tracing off.
+        -- Tracing on (a fresh log), and the state now. "/cf debug off" turns tracing off.
         ns.db.debug = true
         ns.db.debugLog = nil
         local function cv(name) local ok, v = pcall(GetCVar, name) return ok and tostring(v) or "?" end
-        ns.Print("debug on (/ef debug off to stop)")
+        ns.Print("debug on (/cf debug off to stop)")
         ns.Print("SoftTargetInteract=%s Arc=%s Range=%s, saved: %s", cv("SoftTargetInteract"),
             cv("SoftTargetInteractArc"), cv("SoftTargetInteractRange"), tostring(ns.db.cvarRestore ~= nil))
         ns.Print("pole: %s, session: %s, line out: %s, target: %s", tostring(ns.PoleEquipped()),
@@ -416,12 +416,12 @@ SlashCmdList.EASYFISHING = function(msg)
         ns.Print("soft target now: %s", ns.SoftInteractText())
         ns.Print("your Interact key: %s", tostring((GetBindingKey("INTERACTTARGET"))))
     else
-        ns.Print("/ef — %s", L["settings"])
-        ns.Print("/ef lock | unlock — %s", L["lock or unlock the frames"])
-        ns.Print("/ef place — %s", L["show the frames without a fishing pole, to place them"])
-        ns.Print("/ef stats — %s", L["print the catch of this session"])
-        ns.Print("/ef clear — %s", L["start the catch of this session over"])
-        ns.Print("/ef reset — %s", L["put the frames back in their default places"])
-        ns.Print("/ef minimap — %s", L["show or hide the minimap button"])
+        ns.Print("/cf — %s", L["settings"])
+        ns.Print("/cf lock | unlock — %s", L["lock or unlock the frames"])
+        ns.Print("/cf place — %s", L["show the frames without a fishing pole, to place them"])
+        ns.Print("/cf stats — %s", L["print the catch of this session"])
+        ns.Print("/cf clear — %s", L["start the catch of this session over"])
+        ns.Print("/cf reset — %s", L["put the frames back in their default places"])
+        ns.Print("/cf minimap — %s", L["show or hide the minimap button"])
     end
 end

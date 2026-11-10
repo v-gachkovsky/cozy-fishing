@@ -1,11 +1,11 @@
 ## Interface: 16001
-## Title: Easy Fishing
+## Title: Cozy Fishing
 ## Notes: A fishing hook on the screen while a fishing pole is in hand: left-click casts, right-click hooks the fish. Shows the catch of the session.
 ## Author: Volodymyr Hachkovsky
 ## Version: 0.1.0
-## SavedVariables: EasyFishingDB
-## SavedVariablesPerCharacter: EasyFishingCharDB
-## IconTexture: Interface\AddOns\EasyFishing\Media\logo
+## SavedVariables: CozyFishingDB
+## SavedVariablesPerCharacter: CozyFishingCharDB
+## IconTexture: Interface\AddOns\CozyFishing\Media\logo
 
 Locale.lua
 Locales\ukUA.lua

@@ -197,7 +197,7 @@ local function Family(size)
     for _, a in ipairs(ALPHABETS) do
         members[#members + 1] = { alphabet = a.alphabet, file = a.file, height = size, flags = "OUTLINE" }
     end
-    local ok, f = pcall(CreateFontFamily, "EasyFishingFont" .. size, members)
+    local ok, f = pcall(CreateFontFamily, "CozyFishingFont" .. size, members)
     families[size] = ok and f or false
     return families[size]
 end

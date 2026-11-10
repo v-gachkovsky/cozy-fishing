@@ -1,9 +1,9 @@
-<p align="center"><img src="https://raw.githubusercontent.com/v-gachkovsky/easy-fishing/main/docs/logo.png" width="160" alt="Easy Fishing"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/v-gachkovsky/cozy-fishing/main/docs/logo.png" width="160" alt="Cozy Fishing"></p>
 
 **A fishing hook on your screen: left-click casts, right-click hooks the fish. And the catch of the session.**
 
-> **Early development.** Easy Fishing is young. If something looks wrong or you miss a feature, please tell me
-> in the comments or on [GitHub](https://github.com/v-gachkovsky/easy-fishing/issues): no report is too small.
+> **Early development.** Cozy Fishing is young. If something looks wrong or you miss a feature, please tell me
+> in the comments or on [GitHub](https://github.com/v-gachkovsky/cozy-fishing/issues): no report is too small.
 
 No more hunting for the bobber with the mouse. Take a fishing pole in hand and a hook appears on the screen.
 Click it to cast; when the fish bites, right-click it to reel in. Next to it, a see-through grid counts what
@@ -30,7 +30,7 @@ you've caught.
 
 ## How the hook works
 
-An addon can't click the bobber itself, so Easy Fishing uses the game's own **soft targeting**: for the session
+An addon can't click the bobber itself, so Cozy Fishing uses the game's own **soft targeting**: for the session
 it lets the game target objects, which makes your bobber the interact target, and the right click on the hook
 becomes the game's **Interact with Target**. When the pole comes off, those game settings go back to what they
 were. Addons that keep the setting in their own profile (Plater does) are handled: it's set again before every
@@ -38,7 +38,7 @@ cast.
 
 The game doesn't tell addons when a fish bites; watch the bobber or listen for the splash, then right-click.
 
-## Settings (`/ef`)
+## Settings (`/cf`)
 
 Showing and locking the hook and the grid, the hook's size, clearing the target when casting, the grid's
 scale, columns and background, the chat summary, the minimap button, the key that moves the frames, the
@@ -46,10 +46,10 @@ language (English or Ukrainian).
 
 ## Commands
 
-- `/ef`: settings
-- `/ef lock`, `/ef unlock`: lock or unlock both frames
-- `/ef place`: show the frames without a fishing pole, to place them
-- `/ef stats`: print the catch of this session
-- `/ef clear`: start the catch of this session over
-- `/ef reset`: put the frames back in their default places
-- `/ef minimap`: show or hide the minimap button
+- `/cf`: settings
+- `/cf lock`, `/cf unlock`: lock or unlock both frames
+- `/cf place`: show the frames without a fishing pole, to place them
+- `/cf stats`: print the catch of this session
+- `/cf clear`: start the catch of this session over
+- `/cf reset`: put the frames back in their default places
+- `/cf minimap`: show or hide the minimap button
