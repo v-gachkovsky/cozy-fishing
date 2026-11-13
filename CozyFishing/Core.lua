@@ -212,6 +212,7 @@ end
 
 function ns.UpdatePole(initial)
     local on = ns.PoleEquipped()
+    ns.poleOn = on
     if on and not ns.session then
         StartSession(initial)
     elseif not on and ns.session then
@@ -333,6 +334,11 @@ On("PLAYER_EQUIPMENT_CHANGED", function(slot)
     if entered and (slot == nil or slot == POLE_SLOT) then ns.UpdatePole() end
 end)
 
+-- A second look, in case a swap (by an equipment addon, or while loading) went by without the event above.
+On("UNIT_INVENTORY_CHANGED", function()
+    if entered and ns.PoleEquipped() ~= ns.poleOn then ns.UpdatePole() end
+end, "player")
+
 On("SPELLS_CHANGED", function()
     ns.fishName = nil
     if entered then ns.Icon:Refresh() end
@@ -364,7 +370,10 @@ On("LOOT_OPENED", CountLoot)
 On("LOOT_CLOSED", function() lootCounted = nil end)
 
 On("PLAYER_REGEN_DISABLED", function() ns.Icon:EnterCombat() end)
-On("PLAYER_REGEN_ENABLED", function() ns.Icon:LeaveCombat() end)
+On("PLAYER_REGEN_ENABLED", function()
+    if entered and ns.PoleEquipped() ~= ns.poleOn then ns.UpdatePole() end
+    ns.Icon:LeaveCombat()
+end)
 
 On("PLAYER_LOGOUT", function()
     -- Put the game settings back; they're set again at login if the pole is still on.

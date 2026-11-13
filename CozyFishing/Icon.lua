@@ -223,12 +223,16 @@ function Icon:Create()
     hookOwner:SetScript("OnUpdate", HookTick)
 end
 
--- Shows with a fishing pole in hand. A state driver, so it also follows a weapon swap in combat.
+-- Shows with a fishing pole in hand. Out of combat the addon's own look at the main hand decides (the rule is
+-- set again on every equipment change): the game doesn't always re-check the [equipped:] condition right after
+-- a swap, which left the hook on screen with a weapon in hand. In combat Lua can't show or hide a secure
+-- frame, so there the state driver's [equipped:] condition follows a swap.
 local function VisibilityRule()
     local cfg = Cfg()
     if not cfg.enabled then return "hide" end
     if ns.placing then return "show" end
-    return ("[equipped:%s] show; hide"):format(ns.PoleTypeName())
+    return ("[combat,equipped:%s] show; [combat] hide; %s"):format(ns.PoleTypeName(),
+        ns.PoleEquipped() and "show" or "hide")
 end
 
 function Icon:Refresh()
@@ -250,6 +254,7 @@ function Icon:Refresh()
     if rule ~= driver then
         RegisterStateDriver(btn, "visibility", rule)
         driver = rule
+        Trace("hook visibility: %s", rule)
     end
 end
 

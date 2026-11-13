@@ -4,6 +4,13 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/).
 
+## [0.1.1] - 2026-11-13
+
+### Fixed
+- The hook could stay on screen after changing the fishing pole for a weapon, until a `/reload`. Out of combat
+  the addon now checks the main hand itself on every equipment change; the game's `[equipped:]` condition is
+  only relied on in combat, and everything is checked again when combat ends.
+
 ## [0.1.0] - 2026-11-10
 
 The first version, for WoW Forever.
