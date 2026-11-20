@@ -12,6 +12,7 @@ local FISHING_SPELL = 7620
 -- Fishing ranks (Apprentice .. Artisan, and later ones if the client has them).
 local FISHING_IDS = { [7620] = true, [7731] = true, [7732] = true, [18248] = true, [33095] = true, [51294] = true }
 local POLE_SLOT = INVSLOT_MAINHAND or 16
+local OFF_SLOT = INVSLOT_OFFHAND or 17
 local WEAPON_CLASS, FISHING_POLE_SUBCLASS = 2, 20
 -- A saved session older than this (logged out with the pole on) isn't continued.
 local RESUME_WINDOW = 30 * 60
@@ -30,11 +31,18 @@ local DEFAULTS = {
     moveWith = "alt",
     summary = true,
     minimap = { hide = false, angle = 200 },
+    -- Items dimmed in the catch (junk), shown at its end: hidden[itemID] = true.
+    hidden = {},
+    -- One-time messages already shown: keys (the keys can be set), picker (how a key picker works).
+    seen = {},
     icon = {
         enabled = true,
         locked = false,
         size = 48,
         clearTarget = true,
+        timer = true,
+        lure = true,
+        hideWithKeys = false,
         point = { "CENTER", "CENTER", 0, -140 },
     },
     grid = {
@@ -43,7 +51,23 @@ local DEFAULTS = {
         scale = 1,
         columns = 6,
         bgAlpha = 0,
+        skill = true,
         point = { "TOPLEFT", "CENTER", 120, -100 },
+    },
+    -- The button that swaps the weapon for a fishing pole and back.
+    swap = {
+        enabled = true,
+        locked = false,
+        hideWithKey = false,
+        size = 32,
+        point = { "CENTER", "CENTER", -64, -140 },
+    },
+    -- The button that starts and stops a fishing trip (sessions that add up, with a report at the end).
+    trip = {
+        enabled = true,
+        locked = false,
+        size = 32,
+        point = { "CENTER", "CENTER", -104, -140 },
     },
 }
 
@@ -115,11 +139,124 @@ function ns.PoleTypeName()
     return (GetItemSubClassInfo and GetItemSubClassInfo(WEAPON_CLASS, FISHING_POLE_SUBCLASS)) or "Fishing Poles"
 end
 
-function ns.PoleEquipped()
-    local id = GetInventoryItemID("player", POLE_SLOT)
+function ns.IsPole(id)
     if not id or not GetItemInfoInstant then return false end
     local classID, subclassID = select(6, GetItemInfoInstant(id))
     return classID == WEAPON_CLASS and subclassID == FISHING_POLE_SUBCLASS
+end
+
+function ns.PoleEquipped()
+    return ns.IsPole(GetInventoryItemID("player", POLE_SLOT))
+end
+
+-- The zone you're in, for the statistics by zone.
+function ns.ZoneName()
+    local z = GetRealZoneText and GetRealZoneText()
+    if not z or z == "" or ns.IsSecret(z) then z = GetZoneText and GetZoneText() end
+    if not z or z == "" or ns.IsSecret(z) then return UNKNOWN or "?" end
+    return z
+end
+
+------------------------------------------------------------------------
+-- Fishing skill: ns.skill = { rank = 150, max = 225, bonus = 120 } (the bonus from the pole and the lure),
+-- or nil while it can't be read. Three ways, as clients differ: the profession API (GetProfessions' fourth value
+-- is Fishing), the character's skill list, and the skill list with its collapsed headers opened for a moment.
+------------------------------------------------------------------------
+local FISHING_SKILL_LINE = 356
+-- Opening collapsed headers changes the skill list, which fires SKILL_LINES_CHANGED, which reads the skill
+-- again: not more often than this.
+local EXPAND_EVERY = 10
+
+local function Num(v) return type(v) == "number" and not ns.IsSecret(v) end
+
+local function Skill(rank, max, bonus)
+    return { rank = rank, max = Num(max) and max or rank, bonus = Num(bonus) and bonus or 0 }
+end
+
+local function FromProfessions()
+    if not (GetProfessions and GetProfessionInfo) then return nil end
+    local ok, _, _, _, fishing = pcall(GetProfessions)
+    if not ok or not Num(fishing) then return nil end
+    local _, _, rank, max, _, _, line, bonus = GetProfessionInfo(fishing)
+    if Num(rank) and (line == nil or line == FISHING_SKILL_LINE) then return Skill(rank, max, bonus) end
+end
+
+local function IsFishing(name)
+    if type(name) ~= "string" or ns.IsSecret(name) then return false end
+    local want = ns.FishingName()
+    return name == want or name:lower() == want:lower() or name == "Fishing"
+end
+
+local function FromSkillLines()
+    if not (GetNumSkillLines and GetSkillLineInfo) then return nil end
+    for i = 1, GetNumSkillLines() do
+        local name, header, _, rank, _, bonus, max = GetSkillLineInfo(i)
+        if not header and IsFishing(name) and Num(rank) then return Skill(rank, max, bonus) end
+    end
+end
+
+local lastExpand
+local function FromCollapsed()
+    if not (ExpandSkillHeader and CollapseSkillHeader and GetNumSkillLines and GetSkillLineInfo) then return nil end
+    if InCombatLockdown() or (SkillFrame and SkillFrame:IsVisible()) then return nil end
+    if lastExpand and GetTime() - lastExpand < EXPAND_EVERY then return nil end
+    lastExpand = GetTime()
+    local opened = {}
+    local i = 1
+    while i <= GetNumSkillLines() do
+        local name, header, expanded = GetSkillLineInfo(i)
+        if header and not expanded then
+            opened[name] = true
+            ExpandSkillHeader(i)
+        end
+        i = i + 1
+    end
+    if not next(opened) then return nil end
+    local found = FromSkillLines()
+    -- Closed again from the bottom up, so the indexes above stay right.
+    for j = GetNumSkillLines(), 1, -1 do
+        local name, header, expanded = GetSkillLineInfo(j)
+        if header and expanded and opened[name] then CollapseSkillHeader(j) end
+    end
+    return found
+end
+
+function ns.UpdateSkill()
+    local found = FromProfessions() or FromSkillLines() or FromCollapsed()
+    -- Not read this time only because the headers were just opened: keep what was read then.
+    if found or not (lastExpand and GetTime() - lastExpand < EXPAND_EVERY) then ns.skill = found end
+    found = ns.skill
+    local s = ns.session
+    if s and found and not s.skillStart then s.skillStart = found.rank end
+    return found
+end
+
+-- For /cf debug: what each way of reading the skill sees.
+function ns.SkillReport()
+    local parts = {}
+    if GetProfessions then
+        local ok, p1, p2, arch, fishing, cooking = pcall(GetProfessions)
+        parts[#parts + 1] = ok and ("professions %s/%s/%s/fishing %s/%s"):format(tostring(p1), tostring(p2),
+            tostring(arch), tostring(fishing), tostring(cooking)) or "professions: error"
+    else
+        parts[#parts + 1] = "no GetProfessions"
+    end
+    if GetNumSkillLines and GetSkillLineInfo then
+        local n, collapsed, match = GetNumSkillLines(), 0, "none"
+        for i = 1, n do
+            local name, header, expanded, rank = GetSkillLineInfo(i)
+            if header and not expanded then collapsed = collapsed + 1 end
+            if type(name) == "string" and name:lower():find("fish", 1, true) then
+                match = ("%s=%s"):format(name, tostring(rank))
+            end
+        end
+        parts[#parts + 1] = ("skill lines %d (collapsed %d), fishing line: %s"):format(n, collapsed, match)
+    else
+        parts[#parts + 1] = "no GetSkillLineInfo"
+    end
+    local sk = ns.skill
+    parts[#parts + 1] = sk and ("read: %d/%d +%d"):format(sk.rank, sk.max, sk.bonus) or "read: nothing"
+    return table.concat(parts, "; ")
 end
 
 ------------------------------------------------------------------------
@@ -168,7 +305,9 @@ end
 ------------------------------------------------------------------------
 local function NewSession()
     local now = time()
-    return { started = now, last = now, items = {}, order = {}, total = 0, catches = 0, casts = 0 }
+    local skill = ns.UpdateSkill()
+    return { started = now, last = now, items = {}, order = {}, total = 0, catches = 0, casts = 0, zones = {},
+        skillStart = skill and skill.rank }
 end
 
 local function Minutes(s)
@@ -189,7 +328,10 @@ local function StartSession(resume)
     local saved = ns.char.session
     if resume and saved and saved.last and time() - saved.last <= RESUME_WINDOW then
         ns.session = saved
+        saved.zones = saved.zones or {}
     else
+        -- One left from before (logged out with the pole on a while ago) goes to the history.
+        if saved then ns.History.Archive(saved) end
         ns.session = NewSession()
         ns.char.session = ns.session
     end
@@ -199,12 +341,15 @@ local function EndSession(quiet)
     local s = ns.session
     ns.session = nil
     ns.char.session = nil
-    if s and not quiet and ns.db.summary and s.casts > 0 then ns.PrintSession(s, true) end
+    if not s then return end
+    ns.History.Archive(s)
+    if not quiet and ns.db.summary and s.casts > 0 then ns.PrintSession(s, true) end
 end
 
 -- Starts a fresh catch for the session in progress.
 function ns.ClearSession()
     if not ns.session then return end
+    ns.History.Archive(ns.session)
     ns.session = NewSession()
     ns.char.session = ns.session
     ns.RefreshAll()
@@ -213,6 +358,7 @@ end
 function ns.UpdatePole(initial)
     local on = ns.PoleEquipped()
     ns.poleOn = on
+    ns.UpdateSkill()
     if on and not ns.session then
         StartSession(initial)
     elseif not on and ns.session then
@@ -233,6 +379,7 @@ local function CountLoot()
     lootCounted = true
     s.catches = s.catches + 1
     s.last = time()
+    local caught = {}
     for i = 1, GetNumLootItems() do
         local link = GetLootSlotLink(i)
         local id = link and not ns.IsSecret(link) and tonumber(link:match("item:(%d+)"))
@@ -249,9 +396,12 @@ local function CountLoot()
             if icon and not ns.IsSecret(icon) then e.icon = icon end
             if type(quality) == "number" and not ns.IsSecret(quality) then e.quality = quality end
             s.total = s.total + qty
+            caught[#caught + 1] = { id = id, count = qty, icon = e.icon }
         end
     end
+    ns.History.AddCatch(s, ns.ZoneName(), caught)
     ns.Grid:Refresh()
+    ns.HistoryWindow:Refresh()
 end
 
 ------------------------------------------------------------------------
@@ -260,13 +410,20 @@ end
 function ns.RefreshAll()
     if not ns.ready then return end
     ns.Icon:Refresh()
+    ns.Lure:Refresh()
+    ns.Swap:Refresh()
+    ns.Trip:Refresh()
+    ns.Keys:Refresh()
     ns.Grid:Refresh()
     ns.Minimap:Refresh()
+    ns.HistoryWindow:Refresh()
 end
 
 function ns.SetAllLocked(locked)
     ns.db.icon.locked = locked
     ns.db.grid.locked = locked
+    ns.db.swap.locked = locked
+    ns.db.trip.locked = locked
     ns.RefreshAll()
     if ns.RefreshOptions then ns.RefreshOptions() end
 end
@@ -284,6 +441,8 @@ function ns.ResetPositions()
     end
     ns.db.icon.point = ns.DefaultPoint("icon")
     ns.db.grid.point = ns.DefaultPoint("grid")
+    ns.db.swap.point = ns.DefaultPoint("swap")
+    ns.db.trip.point = ns.DefaultPoint("trip")
     ns.RefreshAll()
 end
 
@@ -314,10 +473,14 @@ On("ADDON_LOADED", function(name)
     CozyFishingCharDB = CozyFishingCharDB or {}
     Fill(CozyFishingDB, DEFAULTS)
     ns.db, ns.char = CozyFishingDB, CozyFishingCharDB
+    ns.Keys:SetNames()
 end)
 
 On("PLAYER_LOGIN", function()
     ns.Icon:Create()
+    ns.Lure:Create()
+    ns.Swap:Create()
+    ns.Trip:Create()
     ns.Grid:Create()
     ns.Minimap:Create()
     ns.InitOptions()
@@ -326,18 +489,52 @@ end)
 
 local entered
 On("PLAYER_ENTERING_WORLD", function()
+    if not entered then C_Timer.After(5, function() ns.Keys:Intro() end) end
     ns.UpdatePole(not entered)
     entered = true
 end)
 
 On("PLAYER_EQUIPMENT_CHANGED", function(slot)
-    if entered and (slot == nil or slot == POLE_SLOT) then ns.UpdatePole() end
+    if not entered then return end
+    if slot == nil or slot == POLE_SLOT then ns.UpdatePole() end
+    if slot == nil or slot == POLE_SLOT or slot == OFF_SLOT then ns.Swap:EquipmentChanged() end
 end)
 
 -- A second look, in case a swap (by an equipment addon, or while loading) went by without the event above.
+-- A lure going on or wearing off comes here too.
 On("UNIT_INVENTORY_CHANGED", function()
-    if entered and ns.PoleEquipped() ~= ns.poleOn then ns.UpdatePole() end
+    if not entered then return end
+    if ns.PoleEquipped() ~= ns.poleOn then
+        ns.UpdatePole()
+    else
+        ns.Lure:Refresh()
+    end
+    ns.Swap:EquipmentChanged()
 end, "player")
+
+On("BAG_UPDATE_DELAYED", function()
+    if not entered then return end
+    ns.Lure:Refresh()
+    ns.Swap:Refresh()
+    ns.Trip:Refresh()
+end)
+
+-- Skill-ups, and the lure's bonus coming and going.
+local function SkillChanged()
+    if not entered then return end
+    ns.UpdateSkill()
+    ns.Grid:Refresh()
+end
+On("SKILL_LINES_CHANGED", SkillChanged)
+On("CHAT_MSG_SKILL", SkillChanged)
+
+On("UPDATE_BINDINGS", function()
+    if not entered then return end
+    ns.Keys:Refresh()
+    -- The hook and the swap button may hide, or come back, with the keys.
+    ns.Icon:Refresh()
+    ns.Swap:Refresh()
+end)
 
 On("SPELLS_CHANGED", function()
     ns.fishName = nil
@@ -355,6 +552,7 @@ On("UNIT_SPELLCAST_CHANNEL_START", function(_, _, spellID)
     if s then
         s.casts = s.casts + 1
         s.last = time()
+        ns.History.AddCast(s, ns.ZoneName())
     end
     ns.Icon:SetReeling(true)
 end, "player")
@@ -373,6 +571,8 @@ On("PLAYER_REGEN_DISABLED", function() ns.Icon:EnterCombat() end)
 On("PLAYER_REGEN_ENABLED", function()
     if entered and ns.PoleEquipped() ~= ns.poleOn then ns.UpdatePole() end
     ns.Icon:LeaveCombat()
+    ns.Lure:Refresh()
+    ns.Keys:Refresh()
 end)
 
 On("PLAYER_LOGOUT", function()
@@ -400,6 +600,12 @@ SlashCmdList.COZYFISHING = function(msg)
         ns.Print(ns.placing and L["frames shown for placing."] or L["frames shown only with a fishing pole again."])
     elseif msg == "stats" then
         ns.PrintSession()
+    elseif msg == "history" then
+        ns.HistoryWindow:Toggle()
+    elseif msg == "swap" then
+        ns.Swap.Toggle()
+    elseif msg == "trip" then
+        ns.Trip.Toggle()
     elseif msg == "clear" then
         ns.ClearSession()
     elseif msg == "reset" then
@@ -424,11 +630,15 @@ SlashCmdList.COZYFISHING = function(msg)
             tostring(ns.session ~= nil), tostring(ns.reeling == true), tostring((UnitExists("target"))))
         ns.Print("soft target now: %s", ns.SoftInteractText())
         ns.Print("your Interact key: %s", tostring((GetBindingKey("INTERACTTARGET"))))
+        ns.Print("Fishing skill (%s): %s", ns.FishingName(), ns.SkillReport())
     else
         ns.Print("/cf — %s", L["settings"])
         ns.Print("/cf lock | unlock — %s", L["lock or unlock the frames"])
         ns.Print("/cf place — %s", L["show the frames without a fishing pole, to place them"])
         ns.Print("/cf stats — %s", L["print the catch of this session"])
+        ns.Print("/cf history — %s", L["fishing history and the catch by zone"])
+        ns.Print("/cf swap — %s", L["swap the weapon and the fishing pole"])
+        ns.Print("/cf trip — %s", L["start a fishing trip, or stop it and see its report"])
         ns.Print("/cf clear — %s", L["start the catch of this session over"])
         ns.Print("/cf reset — %s", L["put the frames back in their default places"])
         ns.Print("/cf minimap — %s", L["show or hide the minimap button"])

@@ -1,0 +1,8 @@
+<Bindings>
+    <!-- Cast: a click on the hook icon. Hook: an empty binding; while a fishing pole is in hand its keys are
+         turned into Interact with Target (Keys.lua), which reels in the bobber. -->
+    <Binding name="CLICK CozyFishingIcon:LeftButton" header="COZYFISHING" category="ADDONS"/>
+    <Binding name="COZYFISHING_HOOK" category="ADDONS"/>
+    <!-- Swap: the weapon for a fishing pole from the bags, and back (Swap.lua). -->
+    <Binding name="COZYFISHING_SWAP" category="ADDONS">CozyFishing_Swap()</Binding>
+</Bindings>

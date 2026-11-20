@@ -23,6 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Nothing is packed or published while luacheck or a test fails.
+      - name: Lint and tests
+        run: |
+          sudo apt-get update -q && sudo apt-get install -yq lua5.4 lua-check
+          luacheck .
+          lua5.4 tests/run.lua
+
       - name: Read version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"

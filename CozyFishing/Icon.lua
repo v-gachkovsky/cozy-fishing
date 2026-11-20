@@ -72,7 +72,7 @@ local function HookTick(self, elapsed)
     self.t = (self.t or 0) + elapsed
     if self.t < 0.05 then return end
     self.t = 0
-    local over = btn:IsVisible() and ns.IsMouseOver(btn) or false
+    local over = not ns.hookHidden and btn:IsVisible() and ns.IsMouseOver(btn) or false
     SetHookBinding(over)
     -- On clients where the icon takes no mouse at all while the line is out, the game sets the world's cursor over it.
     SetGearCursor(over)
@@ -89,6 +89,10 @@ end
 -- clicks. It keeps taking mouse motion where the client allows that: the cursor then stays over the UI, where our
 -- gear cursor holds, instead of the world's, which the game sets anew every frame.
 local function ApplyMouse()
+    if ns.hookHidden then -- not drawn: takes no mouse at all
+        btn:EnableMouse(false)
+        return
+    end
     if btn.SetMouseClickEnabled and btn.SetMouseMotionEnabled then
         btn:EnableMouse(true)
         btn:SetMouseMotionEnabled(true)
@@ -99,10 +103,23 @@ local function ApplyMouse()
 end
 
 local function Tooltip(self)
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    -- Above the cast timer and its seconds over the icon's top right corner.
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, (self.bar and self.bar:GetHeight() or 0) + 8)
     GameTooltip:AddLine(ns.FishingName(), 1, 1, 1)
     GameTooltip:AddLine(L["Left-click: cast"], 0.9, 0.8, 0.5)
     GameTooltip:AddLine(L["Right-click: hook the fish (while the line is out)"], 0.9, 0.8, 0.5)
+    local cast, hook = ns.Keys:Text(ns.Keys.CAST), ns.Keys:Text(ns.Keys.HOOK)
+    if cast or hook then
+        GameTooltip:AddLine(L["Keys: cast %s, hook %s"]:format(cast or "-", hook or "-"), 0.9, 0.8, 0.5)
+    end
+    if ns.session then
+        local on, left = ns.Lure.OnPole()
+        if on and left then
+            GameTooltip:AddLine(L["Lure: %d min left"]:format(math.ceil(left / 60)), 0.5, 0.8, 1)
+        elseif not on then
+            GameTooltip:AddLine(L["No lure on the fishing pole."], 0.6, 0.6, 0.6)
+        end
+    end
     if not ns.FishingKnown() then
         GameTooltip:AddLine(L["You haven't learned Fishing yet."], 1, 0.3, 0.3)
     end
@@ -186,11 +203,37 @@ function Icon:Create()
     pulse:SetScript("OnStop", function() glow:SetAlpha(0) end)
     btn.pulse = pulse
 
+    -- How long the line stays out: a bar over the hook (under it the cursor would cover it on a small icon),
+    -- from the game's channel times.
+    local bar = CreateFrame("StatusBar", nil, btn)
+    bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    bar:SetStatusBarColor(1, 0.75, 0.2)
+    bar:SetMinMaxValues(0, 1)
+    local barBg = bar:CreateTexture(nil, "BACKGROUND")
+    barBg:SetAllPoints()
+    barBg:SetColorTexture(0, 0, 0, 0.55)
+    bar.text = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    bar.text:SetPoint("LEFT", bar, "RIGHT", 3, 0)
+    bar:Hide()
+    bar:SetScript("OnUpdate", function(self)
+        local left, full = ns.ChannelTimes()
+        if not left then
+            self:Hide()
+            return
+        end
+        self:SetValue(left / full)
+        self.text:SetText(math.ceil(left))
+    end)
+    btn.bar = bar
+
     local function Layout()
         local w, h = btn:GetSize()
         btn.hook.Layout(w, h)
         btn.hover.Layout(w, h)
         btn.glow.Layout(w, h)
+        bar:ClearAllPoints()
+        bar:SetPoint("BOTTOMLEFT", btn, "TOPLEFT", 0, 3)
+        bar:SetSize(w, math.max(4, math.floor(h / 9 + 0.5)))
     end
     btn:HookScript("OnSizeChanged", Layout)
     Layout()
@@ -223,6 +266,19 @@ function Icon:Create()
     hookOwner:SetScript("OnUpdate", HookTick)
 end
 
+-- Seconds left of the fishing channel and its whole length, or nil when not channeling.
+function ns.ChannelTimes()
+    if not UnitChannelInfo then return nil end
+    local _, _, _, startMS, endMS = UnitChannelInfo("player")
+    if type(startMS) ~= "number" or type(endMS) ~= "number" or ns.IsSecret(startMS) or ns.IsSecret(endMS) then
+        return nil
+    end
+    local full = (endMS - startMS) / 1000
+    local left = endMS / 1000 - GetTime()
+    if full <= 0 or left <= 0 then return nil end
+    return left, full
+end
+
 -- Shows with a fishing pole in hand. Out of combat the addon's own look at the main hand decides (the rule is
 -- set again on every equipment change): the game doesn't always re-check the [equipped:] condition right after
 -- a swap, which left the hook on screen with a weapon in hand. In combat Lua can't show or hide a secure
@@ -249,6 +305,14 @@ function Icon:Refresh()
     if cfg.clearTarget then macro = "/cleartarget [nocombat]\n" .. macro end
     btn:SetAttribute("macrotext1", macro)
     btn.hook.Each("SetDesaturated", not ns.FishingKnown())
+    -- With keys to cast and to hook, the hook itself can go, its cast timer and resize grip with it. It's left in
+    -- place, not drawn and taking no mouse, so the cast key still clicks it (a key clicks a button whether it's
+    -- drawn or not); the lure button by it stays. Shown while placing the frames.
+    ns.hookHidden = cfg.hideWithKeys and not ns.placing and ns.Keys:Text(ns.Keys.CAST) ~= nil
+        and ns.Keys:Text(ns.Keys.HOOK) ~= nil or nil
+    btn.art:SetAlpha(ns.hookHidden and 0 or 1)
+    btn.noGrip = ns.hookHidden -- nothing to resize: no corner grip on hover either
+    if ns.hookHidden then btn.bar:Hide() end
     ApplyMouse()
     local rule = VisibilityRule()
     if rule ~= driver then
@@ -272,13 +336,15 @@ function Icon:SetReeling(on)
     if on then
         btn.pulse:Play()
         hookOwner:Show()
+        btn.bar:SetShown(Cfg().timer and not ns.hookHidden and ns.ChannelTimes() ~= nil)
     else
         btn.pulse:Stop()
         hookOwner:Hide()
         SetHookBinding(false)
+        btn.bar:Hide()
     end
     if not InCombatLockdown() then ApplyMouse() end
-    SetGearCursor(btn:IsVisible() and ns.IsMouseOver(btn) or false)
+    SetGearCursor(not ns.hookHidden and btn:IsVisible() and ns.IsMouseOver(btn) or false)
 end
 
 -- Right before combat lockdown: the last moment the binding can be taken back.

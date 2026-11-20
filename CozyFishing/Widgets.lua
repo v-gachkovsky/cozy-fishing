@@ -26,6 +26,12 @@ function ns.GetMoveModes()
     return list
 end
 
+-- Whether the modifier that moves frames is held now.
+function ns.MoveModifierDown()
+    local down = modifierDown[ns.db.moveWith]
+    return down ~= nil and down() and true or false
+end
+
 function ns.MoveModeText()
     for _, m in ipairs(ns.MOVE_MODES) do
         if m.value == ns.db.moveWith then return L[m.text] end
@@ -174,7 +180,8 @@ ticker:SetScript("OnUpdate", function(_, e)
     for _, f in ipairs(ns.movables) do
         local grip = f.grip
         if grip then
-            local want = f:IsVisible() and not f.getCfg().locked and (f.sizing or ns.IsMouseOver(f)) or false
+            local want = f:IsVisible() and not f.noGrip and not f.getCfg().locked and (f.sizing or ns.IsMouseOver(f))
+                or false
             if want ~= grip:IsShown() then grip:SetShown(want) end
         end
     end
@@ -210,4 +217,62 @@ function ns.SetOutlineFont(fs, size)
     end
     local file = (ns.db and ns.db.locale ~= "enUS") and "Fonts\\FRIZQT___CYR.TTF" or STANDARD_TEXT_FONT
     if fs:SetFont(file, size, "OUTLINE") == false then fs:SetFont(STANDARD_TEXT_FONT, size, "OUTLINE") end
+end
+
+-- The addon's question window: a text and two buttons, mouse only. Not the game's StaticPopup: on this client a
+-- popup takes the whole keyboard while it's open, so a message that came up by itself (the one about keys, after
+-- the first login) left the game deaf to keys. Esc still closes it (UISpecialFrames). which: a name, for the tests.
+local dialog
+
+local function CreateDialog()
+    local template = BackdropTemplateMixin and "BackdropTemplate" or nil
+    dialog = CreateFrame("Frame", "CozyFishingDialog", UIParent, template)
+    dialog:SetSize(400, 140)
+    dialog:SetPoint("TOP", 0, -150)
+    dialog:SetFrameStrata("FULLSCREEN_DIALOG")
+    dialog:SetToplevel(true)
+    dialog:SetClampedToScreen(true)
+    dialog:EnableMouse(true)
+    dialog:EnableKeyboard(false)
+    if dialog.SetBackdrop then
+        dialog:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 },
+        })
+    end
+    dialog.text = dialog:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    dialog.text:SetPoint("TOP", 0, -22)
+    dialog.text:SetWidth(350)
+    dialog.text:SetJustifyH("CENTER")
+    local function Button(x)
+        local b = CreateFrame("Button", nil, dialog, "UIPanelButtonTemplate")
+        b:SetSize(150, 22)
+        b:SetPoint("BOTTOM", x, 18)
+        return b
+    end
+    dialog.ok = Button(-80)
+    dialog.no = Button(80)
+    dialog.ok:SetScript("OnClick", function()
+        local fn = dialog.onAccept
+        dialog:Hide()
+        if fn then fn() end
+    end)
+    dialog.no:SetScript("OnClick", function() dialog:Hide() end)
+    dialog:SetScript("OnHide", function() dialog.onAccept = nil end)
+    dialog:Hide()
+    tinsert(UISpecialFrames, "CozyFishingDialog")
+end
+
+function ns.Dialog(which, text, accept, onAccept, cancel)
+    if not dialog then CreateDialog() end
+    dialog:Hide()
+    dialog.which = which
+    dialog.text:SetText(text)
+    dialog.ok:SetText(accept)
+    dialog.no:SetText(cancel or CANCEL or "Cancel")
+    dialog.onAccept = onAccept
+    dialog:SetHeight(math.max(110, dialog.text:GetStringHeight() + 80))
+    dialog:Show()
 end

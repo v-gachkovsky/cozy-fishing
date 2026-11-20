@@ -1,0 +1,22 @@
+# luacheck and the tests on every push and pull request: the whole addon against a fake WoW API
+# (tests/run.lua). The release runs them too, before it packs anything.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua and luacheck
+        run: sudo apt-get update -q && sudo apt-get install -yq lua5.4 lua-check
+
+      - name: luacheck
+        run: luacheck .
+
+      - name: Tests
+        run: lua5.4 tests/run.lua

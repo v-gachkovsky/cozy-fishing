@@ -1,7 +1,8 @@
 local _, ns = ...
 local L = ns.L
 
--- A round button on the minimap edge: left-click opens the settings, right-click shows the frames for placing.
+-- A round button on the minimap edge: left-click opens the settings, shift-click the history, right-click shows
+-- the frames for placing.
 -- Drag it around the edge.
 local Minimap_ = {}
 ns.Minimap = Minimap_
@@ -54,7 +55,9 @@ function Minimap_:Create()
     border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
 
     b:SetScript("OnClick", function(_, mouse)
-        if mouse == "RightButton" then
+        if mouse == "LeftButton" and IsShiftKeyDown() then
+            ns.HistoryWindow:Toggle()
+        elseif mouse == "RightButton" then
             ns.SetPlacing(not ns.placing)
             ns.Print(ns.placing and L["frames shown for placing."] or L["frames shown only with a fishing pole again."])
         else
@@ -67,6 +70,7 @@ function Minimap_:Create()
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:AddLine("Cozy Fishing", 0.31, 0.76, 0.97)
         GameTooltip:AddLine(L["Left-click: settings"], 1, 1, 1)
+        GameTooltip:AddLine(L["Shift-click: fishing history"], 1, 1, 1)
         GameTooltip:AddLine(L["Right-click: show or hide the frames for placing"], 1, 1, 1)
         local s = ns.session
         if s then

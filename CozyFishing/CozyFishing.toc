@@ -1,8 +1,8 @@
 ## Interface: 16001
 ## Title: Cozy Fishing
-## Notes: A fishing hook on the screen while a fishing pole is in hand: left-click casts, right-click hooks the fish. Shows the catch of the session.
+## Notes: A fishing hook on the screen while a fishing pole is in hand: left-click casts, right-click hooks the fish (or a key for each). Shows the catch of the session, the Fishing skill, a lure reminder and the history by zone.
 ## Author: Volodymyr Hachkovsky
-## Version: 0.1.1
+## Version: 0.2.0
 ## SavedVariables: CozyFishingDB
 ## SavedVariablesPerCharacter: CozyFishingCharDB
 ## IconTexture: Interface\AddOns\CozyFishing\Media\logo
@@ -11,7 +11,13 @@ Locale.lua
 Locales\ukUA.lua
 Core.lua
 Widgets.lua
+History.lua
+Keys.lua
 Icon.lua
+Lure.lua
+Swap.lua
+Trip.lua
 Grid.lua
+HistoryWindow.lua
 Minimap.lua
 Options.lua
